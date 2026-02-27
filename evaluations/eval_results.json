@@ -1,0 +1,92 @@
+[
+  {
+    "model_name": "Qwen3-235B",
+    "repo": "kelseyhightower/nocode",
+    "total_time": 6.173641542030964,
+    "total_tokens": 2902,
+    "path": "single",
+    "success": true,
+    "error": "",
+    "summary_excerpt": "**No Code** is a satirical software project that promotes the idea of writing no code as the ultimate solution for building secure, reliable, and scalable applications. It humorously outlines a develo"
+  },
+  {
+    "model_name": "Llama-3.1-8B",
+    "repo": "kelseyhightower/nocode",
+    "total_time": 4.23127987497719,
+    "total_tokens": 2869,
+    "path": "single",
+    "success": true,
+    "error": "",
+    "summary_excerpt": "**No Code** is a project that advocates for secure and reliable applications by not writing any code. It provides a humorous example of how to deploy an application without doing any actual work. The "
+  },
+  {
+    "model_name": "GPT-4o",
+    "repo": "kelseyhightower/nocode",
+    "total_time": 1.2239182500052266,
+    "total_tokens": 0,
+    "path": "single",
+    "success": false,
+    "error": "LLM API error: Error code: 401 - {'error': {'message': \"You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.\", 'type': 'invalid_request_error', 'param': None, 'code': None}}",
+    "summary_excerpt": ""
+  },
+  {
+    "model_name": "Qwen3-235B",
+    "repo": "psf/requests",
+    "total_time": 9.53283687500516,
+    "total_tokens": 60134,
+    "path": "single",
+    "success": true,
+    "error": "",
+    "summary_excerpt": "**Requests** is a simple, elegant, and widely-used HTTP library for Python. It allows developers to send HTTP/1.1 requests with ease, handling common tasks like authentication, sessions, cookies, and "
+  },
+  {
+    "model_name": "Llama-3.1-8B",
+    "repo": "psf/requests",
+    "total_time": 97.2802424999536,
+    "total_tokens": 122081,
+    "path": "single",
+    "success": true,
+    "error": "",
+    "summary_excerpt": "**Requests** is a simple, yet elegant, HTTP library. It allows you to send HTTP/1.1 requests extremely easily. There\u2019s no need to manually add query strings to your URLs, or to form-encode your `PUT` "
+  },
+  {
+    "model_name": "GPT-4o",
+    "repo": "psf/requests",
+    "total_time": 1.5748413749970496,
+    "total_tokens": 0,
+    "path": "single",
+    "success": false,
+    "error": "LLM API error: Error code: 401 - {'error': {'message': \"You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.\", 'type': 'invalid_request_error', 'param': None, 'code': None}}",
+    "summary_excerpt": ""
+  },
+  {
+    "model_name": "Qwen3-235B",
+    "repo": "django/django",
+    "total_time": 10.811071582953446,
+    "total_tokens": 71580,
+    "path": "single",
+    "success": true,
+    "error": "",
+    "summary_excerpt": "**Django** is a high-level Python web framework that promotes rapid development and clean, pragmatic design. It provides a full-stack solution for building web applications, including an ORM, URL rout"
+  },
+  {
+    "model_name": "Llama-3.1-8B",
+    "repo": "django/django",
+    "total_time": 228.2433265420259,
+    "total_tokens": 146930,
+    "path": "single",
+    "success": false,
+    "error": "LLM returned invalid JSON after retry: '{\\n  \"summary\": \"**Django** is a high-level Python web framework that encourages rapid development and clean, pragmatic design. It provides an architecture, templates, and APIs to build secure, maintai'",
+    "summary_excerpt": ""
+  },
+  {
+    "model_name": "GPT-4o",
+    "repo": "django/django",
+    "total_time": 1.9816505420021713,
+    "total_tokens": 0,
+    "path": "single",
+    "success": false,
+    "error": "LLM API error: Error code: 401 - {'error': {'message': \"You didn't provide an API key. You need to provide your API key in an Authorization header using Bearer auth (i.e. Authorization: Bearer YOUR_KEY), or as the password field (with blank username) if you're accessing the API from your browser and are prompted for a username and password. You can obtain an API key from https://platform.openai.com/account/api-keys.\", 'type': 'invalid_request_error', 'param': None, 'code': None}}",
+    "summary_excerpt": ""
+  }
+]
