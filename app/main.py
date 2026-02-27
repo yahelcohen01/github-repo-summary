@@ -1,5 +1,6 @@
 import asyncio
 import logging
+import time
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, Request
@@ -86,6 +87,7 @@ async def summarize(request: SummarizeRequest) -> SummarizeResponse:
     logger.info(f"Summarize request: {request.github_url}")
 
     async def _run() -> SummarizeResponse:
+        start_time = time.monotonic()
         # 1. Parse GitHub URL
         try:
             owner, repo = parse_github_url(request.github_url)
@@ -141,6 +143,8 @@ async def summarize(request: SummarizeRequest) -> SummarizeResponse:
             # 5. Score and rank files
             ranked_files = filter_and_rank(tree)
             logger.info(f"Ranked {len(ranked_files)} files after filtering")
+            for path, score in [(f["path"], f["score"]) for f in ranked_files[:10]]:
+                logger.debug(f"  Top file: score={score:3d} — {path}")
 
             # 6. Handle repos with only unscoreable files
             if not ranked_files:
@@ -187,14 +191,16 @@ async def summarize(request: SummarizeRequest) -> SummarizeResponse:
             )
 
         # 10. Validate result fields
-        for field in ("summary", "technologies", "structure"):
-            if field not in result:
-                raise HTTPException(
-                    status_code=502,
-                    detail={"status": "error", "message": f"LLM response missing field: {field}"},
-                )
+        missing = [f for f in ("summary", "technologies", "structure") if f not in result]
+        if missing:
+            logger.warning(f"LLM response missing required fields: {missing}")
+            raise HTTPException(
+                status_code=502,
+                detail={"status": "error", "message": f"LLM response missing fields: {missing}"},
+            )
 
-        logger.info(f"Summary complete for {owner}/{repo}")
+        elapsed = time.monotonic() - start_time
+        logger.info(f"Summary complete for {owner}/{repo} in {elapsed:.1f}s")
         return SummarizeResponse(
             summary=result["summary"],
             technologies=result["technologies"],
@@ -204,6 +210,7 @@ async def summarize(request: SummarizeRequest) -> SummarizeResponse:
     try:
         return await asyncio.wait_for(_run(), timeout=ENDPOINT_TIMEOUT)
     except asyncio.TimeoutError:
+        logger.warning(f"Request timed out after {ENDPOINT_TIMEOUT}s: {request.github_url}")
         raise HTTPException(
             status_code=504,
             detail={"status": "error", "message": "Request timed out"},

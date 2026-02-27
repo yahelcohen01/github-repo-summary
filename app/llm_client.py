@@ -62,6 +62,14 @@ async def call_llm(
         raw = response.choices[0].message.content or ""
         logger.debug(f"LLM raw response ({len(raw)} chars)")
 
+        usage = response.usage
+        if usage:
+            logger.debug(
+                f"LLM token usage — model={model}, "
+                f"prompt={usage.prompt_tokens}, completion={usage.completion_tokens}, "
+                f"total={usage.total_tokens}"
+            )
+
         try:
             return json.loads(raw)
         except json.JSONDecodeError:
@@ -121,6 +129,9 @@ async def summarize_map_reduce(
             f"Technologies: {', '.join(result.get('technologies', []))}\n"
             f"Structure notes: {result.get('structure_notes', 'N/A')}\n"
         )
+
+    successful_chunks = len(partial_analyses)
+    logger.info(f"Map step complete: {successful_chunks}/{len(chunks)} chunks succeeded")
 
     if not partial_analyses:
         raise LLMError("All map steps failed — no partial analyses to reduce")

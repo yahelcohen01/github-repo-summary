@@ -99,6 +99,14 @@ async def get_default_branch(
     if response.status_code != 200:
         raise GitHubAPIError(f"Unexpected status {response.status_code} for {url}")
 
+    remaining = response.headers.get("X-RateLimit-Remaining")
+    if remaining is not None:
+        remaining = int(remaining)
+        if remaining < 100:
+            logger.warning(f"GitHub rate limit low: {remaining} requests remaining")
+        else:
+            logger.debug(f"GitHub rate limit remaining: {remaining}")
+
     return response.json()["default_branch"]
 
 
@@ -120,6 +128,14 @@ async def get_repo_tree(
         raise RateLimitError("GitHub API rate limit exceeded")
     if response.status_code != 200:
         raise GitHubAPIError(f"Unexpected status {response.status_code} fetching tree")
+
+    remaining = response.headers.get("X-RateLimit-Remaining")
+    if remaining is not None:
+        remaining = int(remaining)
+        if remaining < 100:
+            logger.warning(f"GitHub rate limit low: {remaining} requests remaining")
+        else:
+            logger.debug(f"GitHub rate limit remaining: {remaining}")
 
     data = response.json()
 
