@@ -1,21 +1,25 @@
 # GitHub Repository Summarizer
 
-A FastAPI service that takes a GitHub repository URL and returns an LLM-generated summary including what the project does, technologies used, and project structure.
+A FastAPI service that accepts a GitHub repository URL and returns an LLM-generated summary: what the project does, technologies used, and how it's organized.
 
 ## Setup
 
 ```bash
 git clone <repo-url>
-cd github-repo-summarizer
+cd github-repo-summary
 
 python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
+source venv/bin/activate   # Windows: venv\Scripts\activate
 
 pip install -r requirements.txt
 
 cp .env.example .env
-# Edit .env and add your NEBIUS_API_KEY
+# Edit .env and set NEBIUS_API_KEY
+```
 
+Start the server:
+
+```bash
 uvicorn app.main:app --host 0.0.0.0 --port 8000
 ```
 
@@ -31,17 +35,17 @@ curl -X POST http://localhost:8000/summarize \
   -d '{"github_url": "https://github.com/psf/requests"}'
 ```
 
-### Success response
+**Success (200)**
 
 ```json
 {
-  "summary": "**Requests** is a popular Python library...",
-  "technologies": ["Python", "urllib3", "certifi"],
-  "structure": "The project follows a standard Python package layout..."
+  "summary": "**Requests** is a simple, elegant HTTP library for Python...",
+  "technologies": ["Python", "urllib3", "certifi", "chardet"],
+  "structure": "Source lives in src/requests/, tests in tests/, docs in docs/."
 }
 ```
 
-### Error response
+**Error (4xx / 5xx)**
 
 ```json
 {
@@ -53,26 +57,28 @@ curl -X POST http://localhost:8000/summarize \
 ## Environment Variables
 
 | Variable | Required | Default | Description |
-|---|---|---|---|
+|----------|----------|---------|-------------|
 | `NEBIUS_API_KEY` | Yes | — | Nebius Token Factory API key |
-| `GITHUB_TOKEN` | No | — | GitHub personal access token (raises rate limit from 60/hr to 5000/hr) |
+| `GITHUB_TOKEN` | No | — | GitHub PAT — raises rate limit from 60 to 5,000 req/hr |
 | `PRIMARY_MODEL` | No | `Qwen/Qwen3-235B-A22B-Instruct-2507` | Model for single calls and reduce step |
 | `MAP_MODEL` | No | `meta-llama/Meta-Llama-3.1-8B-Instruct` | Model for map step (cheap extraction) |
 | `PORT` | No | `8000` | Server port |
 | `LOG_LEVEL` | No | `info` | Logging level (`debug`, `info`, `warning`, `error`) |
 
+Set `LOG_LEVEL=debug` to see per-file scores, token usage, and GitHub rate-limit headers.
+
+## How It Works
+
+**1. Tree fetch, not clone.** The service calls GitHub's Git Trees API to get the full file tree in a single request, then fetches only the files it actually needs. No disk I/O, no cloning, no security risk from arbitrary repo content.
+
+**2. Score-based file selection.** Every file is scored 0–100 by informativeness. READMEs and manifests score highest; test files, config noise, lock files, and binaries are filtered out. The top 50 files by score fill the LLM context window.
+
+**3. Single call by default.** The primary model has a 131k context window. Most repos fit comfortably, so the common path is one LLM call with up to 100k tokens of context.
+
+**4. Map-reduce for large repos.** When context exceeds 100k tokens, files are split into ~30k-token chunks. The cheap map model extracts partial analyses from each chunk in parallel; the primary model then synthesizes everything into a single coherent summary.
+
 ## Model Choice
 
-**Primary model:** `Qwen/Qwen3-235B-A22B-Instruct-2507` — chosen for its 131k context window (most repos fit in a single call), native JSON schema support, and best quality-to-cost ratio on Nebius at $0.20/M input tokens (~$0.01 per request).
+**Primary — `Qwen/Qwen3-235B-A22B-Instruct-2507`:** Best quality-to-cost ratio on Nebius ($0.20/M input). The 131k context window means most repos require only one call. Strong structured-output / JSON support keeps response parsing reliable. Typical cost: ~$0.01 per request.
 
-**Map model:** `meta-llama/Meta-Llama-3.1-8B-Instruct` — 10x cheaper, used only for the extraction step in map-reduce fallback where the task is simple enumeration, not synthesis.
-
-## Approach
-
-1. **No repo cloning** — uses GitHub's Git Trees API to fetch the full file tree in one request, then selectively fetches only relevant files. No disk I/O, no security risk.
-
-2. **File scoring** — files are ranked by informativeness (0–100): README > manifests > source files > tests. Binary files, lock files, and vendored directories are skipped entirely.
-
-3. **Token budget** — fetches the top 50 files, fills a 100k-token context window in score order. Leaves a safety margin for the model's 131k context limit.
-
-4. **Map-reduce fallback** — for very large repos where context exceeds 100k tokens, the service splits files into ~30k-token chunks, extracts partial analyses in parallel using the cheap model, then synthesizes them with the primary model.
+**Map — `meta-llama/Meta-Llama-3.1-8B-Instruct`:** 10× cheaper ($0.02/M input). Used only for the extraction pass in map-reduce, where the task is straightforward enumeration rather than synthesis.
